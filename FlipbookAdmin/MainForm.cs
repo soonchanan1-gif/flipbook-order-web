@@ -79,6 +79,72 @@ public partial class MainForm : Form
     }
 
     // ─────────────────────────────────────────────
+    // 주문 선택 시 배송 버튼 활성화
+    // ─────────────────────────────────────────────
+    private void lvOrders_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (lvOrders.SelectedItems.Count == 0) { btnShip.Enabled = false; return; }
+        var status = lvOrders.SelectedItems[0].SubItems[3].Text;
+        // 프린트 완료 상태일 때만 배송 버튼 활성화
+        btnShip.Enabled = status == "✅ 프린트 완료";
+    }
+
+    // ─────────────────────────────────────────────
+    // 배송 처리 버튼
+    // ─────────────────────────────────────────────
+    private async void btnShip_Click(object sender, EventArgs e)
+    {
+        if (lvOrders.SelectedItems.Count == 0) return;
+
+        var selected    = lvOrders.SelectedItems[0];
+        string orderId  = selected.Name;
+        string orderNum = selected.Text;
+
+        // 운송장 번호 입력 다이얼로그
+        string tracking = ShowInputDialog($"[{orderNum}] 운송장 번호를 입력하세요:", "배송 처리");
+        if (string.IsNullOrWhiteSpace(tracking)) return;
+
+        try
+        {
+            btnShip.Enabled = false;
+            await UpdateStatus(orderId, "shipped");
+            await SaveTrackingNumber(orderId, tracking);
+            UpdateListStatus(orderId, $"🚚 배송중 ({tracking})");
+            Log($"[{orderNum}] 🚚 배송 처리 완료 — 운송장: {tracking}");
+        }
+        catch (Exception ex)
+        {
+            Log($"[{orderNum}] ❌ 배송 처리 오류: {ex.Message}");
+            btnShip.Enabled = true;
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // 운송장 번호 저장
+    // ─────────────────────────────────────────────
+    private async Task SaveTrackingNumber(string orderId, string tracking)
+    {
+        string url  = $"{FirestoreBase}/orders/{orderId}?updateMask.fieldPaths=trackingNumber&key={ApiKey}";
+        string body = $"{{\"fields\":{{\"trackingNumber\":{{\"stringValue\":\"{tracking}\"}}}}}}";
+        var content = new StringContent(body, Encoding.UTF8, "application/json");
+        await _http.PatchAsync(url, content);
+    }
+
+    // ─────────────────────────────────────────────
+    // 텍스트 입력 다이얼로그
+    // ─────────────────────────────────────────────
+    private static string ShowInputDialog(string message, string title)
+    {
+        var form  = new Form { Text = title, Size = new Size(420, 160), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
+        var lbl   = new Label  { Text = message, Location = new Point(15, 18), Size = new Size(380, 24) };
+        var txt   = new TextBox { Location = new Point(15, 46), Size = new Size(375, 28), Font = new Font("맑은 고딕", 11f) };
+        var btn   = new Button  { Text = "확인", Location = new Point(310, 85), Size = new Size(80, 32), DialogResult = DialogResult.OK };
+        form.Controls.AddRange(new Control[] { lbl, txt, btn });
+        form.AcceptButton = btn;
+        return form.ShowDialog() == DialogResult.OK ? txt.Text.Trim() : "";
+    }
+
+    // ─────────────────────────────────────────────
     // Firebase Firestore 폴링
     // ─────────────────────────────────────────────
     private async Task CheckNewOrders()
