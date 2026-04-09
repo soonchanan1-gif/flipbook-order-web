@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>플립북 제작 신청 | 50page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background: #f9f6f2;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    header h1 { font-size: 22px; letter-spacing: 2px; }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px 80px;
+    }
+
+    .step {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .step-title {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .step h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    /* 주문번호 입력 */
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #222; }
+    .input-hint { font-size: 12px; color: #aaa; margin-top: 8px; }
+
+    /* 영상 업로드 */
+    .upload-area {
+      border: 2px dashed #ddd;
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-area:hover { border-color: #222; background: #fafafa; }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-area p { font-size: 14px; color: #888; }
+    .upload-area p strong { color: #222; }
+    .file-selected {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+
+    /* 프레임 선택 */
+    .frame-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .frame-option {
+      border: 2px solid #eee;
+      border-radius: 10px;
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      font-size: 13px;
+    }
+    .frame-option .frame-preview {
+      width: 60px;
+      height: 40px;
+      border-radius: 6px;
+      margin: 0 auto 8px;
+    }
+    .frame-option:hover { border-color: #aaa; }
+    .frame-option.selected { border-color: #222; background: #f5f5f5; }
+
+    /* 필터 선택 */
+    .filter-row {
+      display: flex;
+      gap: 10px;
+    }
+    .filter-option {
+      flex: 1;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+    .filter-option:hover { border-color: #aaa; }
+    .filter-option.selected { border-color: #222; background: #f5f5f5; }
+
+    /* 진행 상태 */
+    .progress-wrap { display: none; margin-top: 14px; }
+    .progress-bar-bg {
+      background: #eee;
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      background: #222;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+    .progress-text { font-size: 12px; color: #888; margin-top: 6px; }
+
+    /* 제출 버튼 */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 10px;
+    }
+    .submit-btn:hover { background: #444; }
+    .submit-btn:disabled { background: #bbb; cursor: not-allowed; }
+
+    /* 완료 화면 */
+    #done-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    #done-screen .done-icon { font-size: 60px; margin-bottom: 20px; }
+    #done-screen h2 { font-size: 22px; margin-bottom: 12px; }
+    #done-screen p { font-size: 14px; color: #888; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>50PAGE</h1>
+</header>
+
+<div class="container" id="main-form">
+
+  <!-- STEP 1: 주문번호 -->
+  <div class="step">
+    <div class="step-title">Step 1</div>
+    <h2>주문번호를 입력해주세요</h2>
+    <input type="text" id="order-number" placeholder="예) 20240409-001" maxlength="40">
+    <p class="input-hint">아임웹 결제 완료 후 받으신 주문번호를 입력해주세요.</p>
+  </div>
+
+  <!-- STEP 2: 영상 업로드 -->
+  <div class="step">
+    <div class="step-title">Step 2</div>
+    <h2>영상을 업로드해주세요</h2>
+    <div class="upload-area" onclick="document.getElementById('video-input').click()">
+      <div class="upload-icon">🎬</div>
+      <input type="file" id="video-input" accept="video/*" onchange="handleFileSelect(this)">
+      <p><strong>클릭해서 영상 선택</strong></p>
+      <p>MP4, MOV, AVI 등 · 최대 500MB</p>
+    </div>
+    <div class="file-selected" id="file-info"></div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <p class="progress-text" id="progress-text">업로드 중...</p>
+    </div>
+  </div>
+
+  <!-- STEP 3: 프레임 선택 -->
+  <div class="step">
+    <div class="step-title">Step 3</div>
+    <h2>프레임을 선택해주세요</h2>
+    <div class="frame-grid">
+      <div class="frame-option" onclick="selectFrame(1, this)">
+        <div class="frame-preview" style="background:#fff; border: 1px solid #ddd;"></div>
+        화이트
+      </div>
+      <div class="frame-option" onclick="selectFrame(2, this)">
+        <div class="frame-preview" style="background:#e4f3f9;"></div>
+        민트
+      </div>
+      <div class="frame-option" onclick="selectFrame(3, this)">
+        <div class="frame-preview" style="background:#2e2e2e;"></div>
+        블랙
+      </div>
+      <div class="frame-option" onclick="selectFrame(4, this)">
+        <div class="frame-preview" style="background: repeating-linear-gradient(90deg,#111 0px,#111 4px,#f5f5f5 4px,#f5f5f5 12px);"></div>
+        필름
+      </div>
+      <div class="frame-option" onclick="selectFrame(5, this)">
+        <div class="frame-preview" style="background:#fdf6e3; border: 1px solid #e0cfa0;"></div>
+        엽서
+      </div>
+      <div class="frame-option" onclick="selectFrame(6, this)">
+        <div class="frame-preview" style="background:#fff9c4; border: 2px solid #f9a825;"></div>
+        만화
+      </div>
+      <div class="frame-option" onclick="selectFrame(7, this)">
+        <div class="frame-preview" style="background:#9fccd5;"></div>
+        모래시계
+      </div>
+      <div class="frame-option" onclick="selectFrame(8, this)">
+        <div class="frame-preview" style="background:#fff;"></div>
+        고양이
+      </div>
+      <div class="frame-option" onclick="selectFrame(9, this)">
+        <div class="frame-preview" style="background:#f2ced5;"></div>
+        새
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: 필터 선택 -->
+  <div class="step">
+    <div class="step-title">Step 4</div>
+    <h2>필터를 선택해주세요</h2>
+    <div class="filter-row">
+      <div class="filter-option selected" onclick="selectFilter(0, this)">원본</div>
+      <div class="filter-option" onclick="selectFilter(1, this)">밝게</div>
+      <div class="filter-option" onclick="selectFilter(2, this)">흑백</div>
+    </div>
+  </div>
+
+  <!-- 제출 -->
+  <button class="submit-btn" id="submit-btn" onclick="submitOrder()">제작 신청하기</button>
+
+</div>
+
+<!-- 완료 화면 -->
+<div id="done-screen">
+  <div class="done-icon">✅</div>
+  <h2>신청이 완료되었습니다!</h2>
+  <p>
+    영상을 확인한 후 플립북 제작을 시작할게요.<br>
+    제작 완료 시 배송 정보를 안내드립니다.<br><br>
+    문의: <strong>contact@50page.co.kr</strong>
+  </p>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwD8DbcPoIbLRPpTgbfRtOHaxT8zL4__g",
+    authDomain: "fifty-page.firebaseapp.com",
+    projectId: "fifty-page",
+    storageBucket: "fifty-page.appspot.com",
+    messagingSenderId: "1090594085393",
+    appId: "1:1090594085393:web:00dfb0c7d01e3cd2862fb0"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+  const db = firebase.firestore();
+
+  let selectedFile = null;
+  let selectedFrame = 0;
+  let selectedFilter = 0;
+  let uploadedVideoPath = null;
+
+  function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (file.size > maxSize) {
+      alert('파일 크기가 500MB를 초과합니다. 더 짧은 영상을 사용해주세요.');
+      return;
+    }
+
+    selectedFile = file;
+    const info = document.getElementById('file-info');
+    info.style.display = 'block';
+    info.textContent = `선택된 파일: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+  }
+
+  function selectFrame(index, el) {
+    document.querySelectorAll('.frame-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedFrame = index;
+  }
+
+  function selectFilter(index, el) {
+    document.querySelectorAll('.filter-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedFilter = index;
+  }
+
+  async function submitOrder() {
+    const orderNumber = document.getElementById('order-number').value.trim();
+
+    if (!orderNumber) {
+      alert('주문번호를 입력해주세요.');
+      return;
+    }
+    if (!selectedFile) {
+      alert('영상 파일을 선택해주세요.');
+      return;
+    }
+    if (selectedFrame === 0) {
+      alert('프레임을 선택해주세요.');
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '업로드 중...';
+
+    // 영상 업로드
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    progressWrap.style.display = 'block';
+
+    const orderId = `order_${orderNumber}_${Date.now()}`;
+    const storageRef = storage.ref(`orders/${orderId}/video${getFileExt(selectedFile.name)}`);
+    const uploadTask = storageRef.put(selectedFile);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        progressBar.style.width = pct + '%';
+        progressText.textContent = `업로드 중... ${pct}%`;
+      },
+      (error) => {
+        alert('업로드 중 오류가 발생했습니다. 다시 시도해주세요.\n' + error.message);
+        btn.disabled = false;
+        btn.textContent = '제작 신청하기';
+        progressWrap.style.display = 'none';
+      },
+      async () => {
+        // 업로드 완료 후 Firestore에 주문 저장
+        const videoUrl = await uploadTask.snapshot.ref.getDownloadURL();
+
+        await db.collection('orders').doc(orderId).set({
+          orderId: orderId,
+          orderNumber: orderNumber,
+          videoPath: `orders/${orderId}/video${getFileExt(selectedFile.name)}`,
+          videoUrl: videoUrl,
+          frameIndex: selectedFrame,
+          filterIndex: selectedFilter,
+          status: 'received',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 완료 화면 표시
+        document.getElementById('main-form').style.display = 'none';
+        document.getElementById('done-screen').style.display = 'block';
+      }
+    );
+  }
+
+  function getFileExt(filename) {
+    const parts = filename.split('.');
+    return parts.length > 1 ? '.' + parts[parts.length - 1] : '';
+  }
+</script>
+
+</body>
+</html>

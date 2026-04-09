@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>파일 다운로드 | 50page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background: #f9f6f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    h1 { font-size: 20px; margin-bottom: 8px; }
+    p { font-size: 14px; color: #888; margin-bottom: 32px; line-height: 1.6; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: #222; color: #fff; }
+    .btn-primary:hover { background: #444; }
+    .btn-secondary { background: #f0f0f0; color: #222; }
+    .btn-secondary:hover { background: #e0e0e0; }
+    .error { color: #e53935; font-size: 14px; margin-top: 20px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>50PAGE</h1>
+    <p>촬영해주셔서 감사합니다!<br>아래 버튼으로 영상과 사진을 다운로드하세요.</p>
+    <button class="btn btn-primary" onclick="downloadFile('video')">영상 다운로드</button>
+    <button class="btn btn-secondary" onclick="downloadFile('image')">사진 다운로드</button>
+    <p class="error" id="error-msg">파일을 찾을 수 없습니다. 링크를 다시 확인해주세요.</p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDwD8DbcPoIbLRPpTgbfRtOHaxT8zL4__g",
+      authDomain: "fifty-page.firebaseapp.com",
+      projectId: "fifty-page",
+      storageBucket: "fifty-page.appspot.com",
+      messagingSenderId: "1090594085393",
+      appId: "1:1090594085393:web:00dfb0c7d01e3cd2862fb0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+
+    function getFolderFromUrl() {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      return parts[0] || '';
+    }
+
+    async function downloadFile(type) {
+      const folder = getFolderFromUrl();
+      if (!folder) {
+        document.getElementById('error-msg').style.display = 'block';
+        return;
+      }
+
+      const fileName = type === 'video' ? 'video.mp4' : 'image.jpg';
+      try {
+        const url = await storage.ref(`${folder}/${fileName}`).getDownloadURL();
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (e) {
+        document.getElementById('error-msg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
