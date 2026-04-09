@@ -181,10 +181,10 @@ public partial class MainForm : Form
     // ─────────────────────────────────────────────
     private static string ShowInputDialog(string message, string title)
     {
-        var form  = new Form { Text = title, Size = new Size(420, 160), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
-        var lbl   = new Label  { Text = message, Location = new Point(15, 18), Size = new Size(380, 24) };
-        var txt   = new TextBox { Location = new Point(15, 46), Size = new Size(375, 28), Font = new Font("맑은 고딕", 11f) };
-        var btn   = new Button  { Text = "확인", Location = new Point(310, 85), Size = new Size(80, 32), DialogResult = DialogResult.OK };
+        var form  = new Form { Text = title, Size = new Size(500, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
+        var lbl   = new Label  { Text = message, Location = new Point(20, 22), Size = new Size(450, 26), Font = new Font("맑은 고딕", 10f) };
+        var txt   = new TextBox { Location = new Point(20, 55), Size = new Size(445, 32), Font = new Font("맑은 고딕", 13f) };
+        var btn   = new Button  { Text = "확인", Location = new Point(385, 108), Size = new Size(80, 36), DialogResult = DialogResult.OK, Font = new Font("맑은 고딕", 10f) };
         form.Controls.AddRange(new Control[] { lbl, txt, btn });
         form.AcceptButton = btn;
         return form.ShowDialog() == DialogResult.OK ? txt.Text.Trim() : "";
