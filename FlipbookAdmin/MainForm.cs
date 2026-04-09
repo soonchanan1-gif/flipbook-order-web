@@ -61,13 +61,59 @@ public partial class MainForm : Form
         btnStop.Enabled  = true;
         SetStatus("● 모니터링 중", Color.Green);
 
-        // 시작 즉시 한 번 확인
+        // 기존 주문 목록 불러오기
+        await LoadExistingOrders();
+
+        // 시작 즉시 새 주문 확인
         await CheckNewOrders();
 
         // 이후 30초마다 확인
         _pollTimer = new System.Windows.Forms.Timer { Interval = 30_000 };
         _pollTimer.Tick += async (_, _) => await CheckNewOrders();
         _pollTimer.Start();
+    }
+
+    // ─────────────────────────────────────────────
+    // 앱 시작 시 기존 주문 목록 불러오기
+    // ─────────────────────────────────────────────
+    private async Task LoadExistingOrders()
+    {
+        try
+        {
+            Log("기존 주문 목록 불러오는 중...");
+            string url  = $"{FirestoreBase}/orders?key={ApiKey}";
+            string json = await _http.GetStringAsync(url);
+            var orders  = ParseOrders(json);
+
+            foreach (var o in orders.OrderByDescending(x => x.OrderNumber))
+            {
+                if (lvOrders.Items.ContainsKey(o.OrderId)) continue;
+
+                string frame  = o.FrameIndex  < FrameNames.Length  ? FrameNames[o.FrameIndex]   : "?";
+                string filter = o.FilterIndex < FilterNames.Length ? FilterNames[o.FilterIndex] : "?";
+                string statusText = o.Status switch
+                {
+                    "received"   => "⏳ 접수됨",
+                    "processing" => "⚙️ 처리 중",
+                    "printed"    => "✅ 프린트 완료",
+                    "shipped"    => $"🚚 배송중",
+                    "error"      => "❌ 오류",
+                    _            => o.Status
+                };
+
+                var item = new ListViewItem(o.OrderNumber);
+                item.SubItems.Add(frame);
+                item.SubItems.Add(filter);
+                item.SubItems.Add(statusText);
+                item.Name = o.OrderId;
+                lvOrders.Items.Add(item);
+            }
+            Log($"주문 {orders.Count}건 불러옴");
+        }
+        catch (Exception ex)
+        {
+            Log($"주문 목록 불러오기 오류: {ex.Message}");
+        }
     }
 
     private void btnStop_Click(object sender, EventArgs e)
