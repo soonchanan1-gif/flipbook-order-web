@@ -372,8 +372,26 @@ public partial class MainForm : Form
 
     private static int Int(JsonElement f, string key)
     {
-        if (f.TryGetProperty(key, out var v) && v.TryGetProperty("integerValue", out var n))
-            return int.TryParse(n.GetString(), out int r) ? r : 0;
+        if (!f.TryGetProperty(key, out var v)) return 0;
+
+        // integerValue (Firebase Admin SDK 방식)
+        if (v.TryGetProperty("integerValue", out var n))
+        {
+            if (n.ValueKind == JsonValueKind.String)
+                return int.TryParse(n.GetString(), out int r) ? r : 0;
+            if (n.ValueKind == JsonValueKind.Number)
+                return n.GetInt32();
+        }
+
+        // doubleValue (Firebase JS SDK가 숫자를 double로 저장하는 경우)
+        if (v.TryGetProperty("doubleValue", out var d))
+        {
+            if (d.ValueKind == JsonValueKind.Number)
+                return (int)d.GetDouble();
+            if (d.ValueKind == JsonValueKind.String)
+                return double.TryParse(d.GetString(), out double dv) ? (int)dv : 0;
+        }
+
         return 0;
     }
 
