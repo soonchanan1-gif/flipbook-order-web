@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /orders/{orderId} {
+
+      // 읽기: 누구나 허용 (중복 체크 + 어드민 앱)
+      allow read: if true;
+
+      // 생성: 고객이 주문 접수할 때
+      // - status 는 반드시 "received" 여야 함 (멋대로 "printed" 등 못 씀)
+      // - 필수 필드가 모두 있어야 함
+      allow create: if request.resource.data.status == "received"
+                    && request.resource.data.keys().hasAll([
+                         'orderNumber', 'status', 'videoUrl',
+                         'frameIndex', 'filterIndex', 'orderId'
+                       ]);
+
+      // 수정: status 변경 가능한 값만 허용
+      // (어드민 앱에서 processing → printed → shipped 로 변경)
+      allow update: if request.resource.data.status in [
+                         'processing', 'printed', 'shipped', 'error'
+                       ];
+
+      // 삭제: 불허
+      allow delete: if false;
+    }
+  }
+}

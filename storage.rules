@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // orders/ 폴더만 접근 허용
+    match /orders/{orderId}/{allPaths=**} {
+
+      // 업로드: 500MB 이하 영상만 허용
+      allow write: if request.resource.size < 500 * 1024 * 1024;
+
+      // 다운로드: 허용 (어드민 앱에서 영상 다운로드)
+      allow read: if true;
+    }
+
+    // 그 외 경로는 전부 차단
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
