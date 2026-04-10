@@ -285,12 +285,12 @@
 
 <script>
   const firebaseConfig = {
-    apiKey: "AIzaSyDwD8DbcPoIbLRPpTgbfRtOHaxT8zL4__g",
-    authDomain: "fifty-page.firebaseapp.com",
-    projectId: "fifty-page",
-    storageBucket: "fifty-page.appspot.com",
-    messagingSenderId: "1090594085393",
-    appId: "1:1090594085393:web:00dfb0c7d01e3cd2862fb0"
+    apiKey: "AIzaSyDk7wDYBG-dXqqOpVNOS0K9FRWmSFA8N-k",
+    authDomain: "fifty-page-order-458df.firebaseapp.com",
+    projectId: "fifty-page-order-458df",
+    storageBucket: "fifty-page-order-458df.firebasestorage.app",
+    messagingSenderId: "920044659691",
+    appId: "1:920044659691:web:135db6f0e9ea0bdd052fae"
   };
 
   firebase.initializeApp(firebaseConfig);
@@ -348,6 +348,21 @@
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
+    btn.textContent = '확인 중...';
+
+    // 주문번호 중복 체크
+    const existing = await db.collection('orders')
+      .where('orderNumber', '==', orderNumber)
+      .get();
+
+    const alreadyUsed = existing.docs.some(doc => doc.data().status !== 'error');
+    if (alreadyUsed) {
+      alert('이미 접수된 주문번호입니다.\n주문번호를 다시 확인해주세요.');
+      btn.disabled = false;
+      btn.textContent = '제작 신청하기';
+      return;
+    }
+
     btn.textContent = '업로드 중...';
 
     // 영상 업로드
